@@ -39,8 +39,17 @@ export class BaseWidget extends Widget {
 
     protected readonly toDispose = new DisposableCollection();
     protected readonly toDisposeOnDetach = new DisposableCollection();
+
     protected scrollBar?: PerfectScrollbar;
     protected scrollOptions?: PerfectScrollbar.Options;
+    protected toolbar?: WidgetToolbar;
+
+    constructor(protected readonly options?: BaseWidget.Options) {
+        super(options);
+        if (!!this.options && !!this.options.toolbar) {
+            this.toolbar = new WidgetToolbar();
+        }
+    }
 
     dispose(): void {
         if (this.isDisposed) {
@@ -74,6 +83,13 @@ export class BaseWidget extends Widget {
         super.onBeforeDetach(msg);
     }
 
+    // protected onActivateRequest(msg: Message): void {
+    //     super.onActivateRequest(msg);
+    //     if (this.hasToolbar()) {
+
+    //     }
+    // }
+
     protected onAfterAttach(msg: Message): void {
         super.onAfterAttach(msg);
         if (this.scrollOptions) {
@@ -90,6 +106,18 @@ export class BaseWidget extends Widget {
                     container.style.overflow = null;
                 }));
             })();
+        }
+        if (this.toolbar) {
+            if (this.toolbar.isAttached) {
+                Widget.detach(this.toolbar);
+            }
+            Widget.attach(this.toolbar, this.node.parentElement!);
+            this.toDisposeOnDetach.push(Disposable.create(() => {
+                if (this.toolbar) {
+                    Widget.detach(this.toolbar);
+                    this.toolbar = undefined;
+                }
+            }));
         }
     }
 
@@ -125,6 +153,15 @@ export class BaseWidget extends Widget {
     protected addClipboardListener<K extends 'cut' | 'copy' | 'paste'>(element: HTMLElement, type: K, listener: EventListenerOrEventListenerObject<K>): void {
         this.toDisposeOnDetach.push(addClipboardListener(element, type, listener));
     }
+
+}
+
+export namespace BaseWidget {
+
+    export interface Options extends Widget.IOptions {
+        readonly toolbar?: boolean;
+    }
+
 }
 
 export function setEnabled(element: HTMLElement, enabled: boolean): void {
@@ -214,4 +251,18 @@ export function addClipboardListener<K extends 'cut' | 'copy' | 'paste'>(element
     return Disposable.create(() =>
         document.removeEventListener(type, documentListener)
     );
+}
+
+export class WidgetToolbar extends BaseWidget {
+
+    constructor(readonly options?: BaseWidget.Options) {
+        super(options);
+        if (this.options && this.options.toolbar) {
+            throw new Error(`A toolbar widget cannot have a toolbar. 'options.toolbar: true' is prohibited here. 'options' was: ${JSON.stringify(options)}`);
+        }
+        const div = document.createElement('div');
+        div.classList.add('theia-widget-toolbar');
+        this.node.appendChild(div);
+    }
+
 }
