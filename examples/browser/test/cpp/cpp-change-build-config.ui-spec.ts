@@ -67,30 +67,28 @@ int main() {}
     for (const buildnum of [1, 2]) {
         const buildDir = path.join(cppRootDir, `build${buildnum}`);
         fs.mkdirSync(buildDir);
-        fs.writeFileSync(path.join(buildDir, 'compile_commands.json'), `
-[{
-    "file": "../src.cpp",
-    "directory": "${buildDir}",
-    "arguments": ["c++", "-c", "-DMACRO=${buildnum}", "../src.cpp"]
-]]
-`);
+        const compileCommandsContents = [{
+            file: '../src.cpp',
+            directory: buildDir,
+            arguments: ['c++', '-c', `-DMACRO=${buildnum}`, '../src.cpp'],
+        }];
+        fs.writeFileSync(path.join(buildDir, 'compile_commands.json'), JSON.stringify(compileCommandsContents));
     }
 
     // Write the list of build configs in the workspace preferences.  Hopefully,
     // no other test needs to write preferences...
     const dotTheiaDir = path.join(rootDir, '.theia');
     fs.mkdirSync(dotTheiaDir);
-    fs.writeFileSync(path.join(dotTheiaDir, 'settings.json'), `
-{
-    "cpp.buildConfigurations": [{
-        "name": "Build one",
-        "directory": "${path.join(cppRootDir, 'build1')}"
-    }, {
-        "name": "Build two",
-        "directory": "${path.join(cppRootDir, 'build2')}"
-    }]
-}
-`);
+    const settingsContents = {
+        'cpp.buildConfigurations': [{
+            name: 'Build one',
+            directory: path.join(cppRootDir, 'build1'),
+        }, {
+            name: 'Build two',
+            directory: path.join(cppRootDir, 'build2')
+        }]
+    };
+    fs.writeFileSync(path.join(dotTheiaDir, 'settings.json'), JSON.stringify(settingsContents));
 
     return rootDir;
 }
