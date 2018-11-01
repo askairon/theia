@@ -81,6 +81,7 @@ export const frontendApplicationModule = new ContainerModule((bind, unbind, isBo
 
     bindContributionProvider(bind, TabBarToolbarContribution);
     bind(TabBarToolbarRegistry).toSelf().inSingletonScope();
+    bind(FrontendApplicationContribution).toService(TabBarToolbarRegistry);
     bind(DockPanelRendererFactory).toAutoFactory(DockPanelRenderer);
     bind(DockPanelRenderer).toSelf();
     bind(TabBarRendererFactory).toFactory(context => () => {

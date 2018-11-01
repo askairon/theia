@@ -14,9 +14,11 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Command, CommandRegistry } from '../../common/command';
+import { ContributionProvider } from '../../common/contribution-provider';
 import { Widget } from '../widgets';
+import { FrontendApplicationContribution } from '../frontend-application';
 
 export const TabBarToolbarContribution = Symbol('TabBarToolbarContribution');
 export interface TabBarToolbarContribution {
@@ -61,10 +63,21 @@ export interface TabBarToolbarItem {
 }
 
 @injectable()
-export class TabBarToolbarRegistry {
+export class TabBarToolbarRegistry implements FrontendApplicationContribution {
 
     @inject(CommandRegistry)
     protected readonly commandRegistry: CommandRegistry;
+
+    @inject(ContributionProvider)
+    @named(TabBarToolbarContribution)
+    protected readonly contributionProvider: ContributionProvider<TabBarToolbarContribution>;
+
+    onStart(): void {
+        const contributions = this.contributionProvider.getContributions();
+        for (const contribution of contributions) {
+            contribution.registerToolbarItems(this);
+        }
+    }
 
     protected items: Map<string, TabBarToolbarItem> = new Map();
 

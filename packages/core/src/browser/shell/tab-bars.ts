@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import PerfectScrollbar from 'perfect-scrollbar';
-import { TabBar, Title, Widget, Panel } from '@phosphor/widgets';
+import { TabBar, Title, Widget } from '@phosphor/widgets';
 import { VirtualElement, h, VirtualDOM, ElementInlineStyle } from '@phosphor/virtualdom';
 import { MenuPath } from '../../common';
 import { ContextMenuRenderer } from '../context-menu-renderer';
@@ -322,7 +322,7 @@ export class ToolbarAwareTabBar extends ScrollableTabBar {
                 const { owner } = title;
                 const items = this.tabBarToolbarRegistry.activeItemsFor(owner);
                 if (items.length === 0) {
-                    console.log('no items for ' + title.caption + ' ' + title.owner);
+                    // console.log('no items for ' + title.caption + ' ' + title.owner);
                 } else {
                     items.forEach(item => console.log(item.id));
                 }
