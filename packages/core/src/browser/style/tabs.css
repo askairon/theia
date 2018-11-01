@@ -153,3 +153,22 @@
   width: 15px;
   line-height: 1.7;
 }
+
+/*-----------------------------------------------------------------------------
+| Tab-bar toolbar
+|----------------------------------------------------------------------------*/
+
+.p-TabBar-toolbar {
+  z-index: 1001; /* Due to the scrollbar (`z-index: 1000;`) it has a greater `z-index`. */
+  display: flex;
+  flex-grow: 1;
+
+  /* TODO remove below */
+  min-width: 20px;
+  background: red;
+}
+
+.p-TabBar-content-container {
+  background: rgb(30, 32, 26);
+  display: flex;
+}

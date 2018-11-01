@@ -61,6 +61,7 @@ import { AboutDialog, AboutDialogProps } from './about-dialog';
 import { EnvVariablesServer, envVariablesPath } from './../common/env-variables';
 import { FrontendApplicationStateService } from './frontend-application-state';
 import { JsonSchemaStore } from './json-schema-store';
+import { TabBarToolbarRegistry, TabBarToolbarContribution } from './shell/tab-toolbar';
 
 export const frontendApplicationModule = new ContainerModule((bind, unbind, isBound, rebind) => {
     const themeService = ThemeService.get();
@@ -78,6 +79,8 @@ export const frontendApplicationModule = new ContainerModule((bind, unbind, isBo
     bind(SidePanelHandler).toSelf();
     bind(SplitPositionHandler).toSelf().inSingletonScope();
 
+    bindContributionProvider(bind, TabBarToolbarContribution);
+    bind(TabBarToolbarRegistry).toSelf().inSingletonScope();
     bind(DockPanelRendererFactory).toAutoFactory(DockPanelRenderer);
     bind(DockPanelRenderer).toSelf();
     bind(TabBarRendererFactory).toFactory(context => () => {

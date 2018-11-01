@@ -30,6 +30,7 @@ import { SidePanelHandler, SidePanel, SidePanelHandlerFactory, TheiaDockPanel } 
 import { TabBarRendererFactory, TabBarRenderer, SHELL_TABBAR_CONTEXT_MENU, ScrollableTabBar, ToolbarAwareTabBar } from './tab-bars';
 import { SplitPositionHandler, SplitPositionOptions } from './split-panels';
 import { FrontendApplicationStateService } from '../frontend-application-state';
+import { TabBarToolbarRegistry } from './tab-toolbar';
 
 /** The class name added to ApplicationShell instances. */
 const APPLICATION_SHELL_CLASS = 'theia-ApplicationShell';
@@ -56,18 +57,19 @@ export class DockPanelRenderer implements DockLayout.IRenderer {
     readonly tabBarClasses: string[] = [];
 
     constructor(
-        @inject(TabBarRendererFactory) protected readonly tabBarRendererFactory: () => TabBarRenderer
+        @inject(TabBarRendererFactory) protected readonly tabBarRendererFactory: () => TabBarRenderer,
+        @inject(TabBarToolbarRegistry) protected readonly tabBarToolbarRegistry: TabBarToolbarRegistry
     ) { }
 
     createTabBar(): TabBar<Widget> {
         const renderer = this.tabBarRendererFactory();
-        const tabBar = new ToolbarAwareTabBar({
+        const tabBar = new ToolbarAwareTabBar(this.tabBarToolbarRegistry, {
             renderer,
             // Scroll bar options
             handlers: ['drag-thumb', 'keyboard', 'wheel', 'touch'],
             useBothWheelAxes: true,
             scrollXMarginOffset: 4,
-            suppressScrollY: true
+            suppressScrollY: true,
         });
         this.tabBarClasses.forEach(c => tabBar.addClass(c));
         renderer.tabBar = tabBar;
@@ -80,7 +82,7 @@ export class DockPanelRenderer implements DockLayout.IRenderer {
         return DockPanel.defaultRenderer.createHandle();
     }
 
-    protected onCurrentTabChanged(sender: ScrollableTabBar, { currentIndex }: TabBar.ICurrentChangedArgs<Widget>): void {
+    protected onCurrentTabChanged(sender: ToolbarAwareTabBar, { currentIndex }: TabBar.ICurrentChangedArgs<Widget>): void {
         if (currentIndex >= 0) {
             sender.revealTab(currentIndex);
         }

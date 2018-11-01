@@ -23,6 +23,7 @@ import { Signal } from '@phosphor/signaling';
 import { Message } from '@phosphor/messaging';
 import { ArrayExt } from '@phosphor/algorithm';
 import { ElementExt } from '@phosphor/domutils';
+import { TabBarToolbarRegistry } from './tab-toolbar';
 
 /** The class name added to hidden content nodes, which are required to render vertical side bars. */
 const HIDDEN_CONTENT_CLASS = 'theia-TabBar-hidden-content';
@@ -279,31 +280,77 @@ export class ScrollableTabBar extends TabBar<Widget> {
 
 export class ToolbarAwareTabBar extends ScrollableTabBar {
 
-    constructor(protected readonly options?: TabBar.IOptions<Widget> & PerfectScrollbar.Options) {
-        super(options);
+    protected contentContainer: HTMLElement | undefined;
+    protected toolbar: HTMLElement | undefined;
 
-        const contentNode = this.node.getElementsByClassName('p-TabBar-content')[0];
+    constructor(protected readonly tabBarToolbarRegistry: TabBarToolbarRegistry, protected readonly options?: TabBar.IOptions<Widget> & PerfectScrollbar.Options) {
+        super(options);
+        this.rewireDOM();
+    }
+
+    get contentNode(): HTMLUListElement {
+        return this.tabBarContainer.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT)[0] as HTMLUListElement;
+    }
+
+    protected get scrollbarHost(): HTMLElement {
+        return this.tabBarContainer;
+    }
+
+    protected get tabBarContainer(): HTMLElement {
+        return this.node.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER)[0] as HTMLElement;
+    }
+
+    protected onBeforeDetach(msg: Message): void {
+        if (this.contentContainer) {
+            this.node.removeChild(this.contentContainer);
+        }
+        if (this.toolbar) {
+            this.node.removeChild(this.toolbar);
+        }
+        this.currentChanged.disconnect(this.onCurrentTabChanged, this);
+        super.onBeforeDetach(msg);
+    }
+
+    protected onAfterAttach(msg: Message): void {
+        this.currentChanged.connect(this.onCurrentTabChanged, this);
+    }
+
+    protected onCurrentTabChanged(sender: ToolbarAwareTabBar, { currentIndex }: TabBar.ICurrentChangedArgs<Widget>): void {
+        if (currentIndex >= 0) {
+            const title = this.titles[currentIndex];
+            if (title) {
+                const { owner } = title;
+                const items = this.tabBarToolbarRegistry.activeItemsFor(owner);
+                if (items.length === 0) {
+                    console.log('no items for ' + title.caption + ' ' + title.owner);
+                } else {
+                    items.forEach(item => console.log(item.id));
+                }
+            }
+        }
+    }
+
+    /**
+     * Restructures the DOM defined in PhosphorJS.
+     *
+     * By default the tabs (`li`) are contained in the `this.contentNode` (`lu`) which is wrapped in a `div` (`this.node`).
+     * Instead of this structure, we add a container for the `this.contentNode` and for the toolbar.
+     * The scrollbar will only work for the `ul` part but it does not affect the toolbar, so it can be on the right hand-side.
+     */
+    protected rewireDOM(): void {
+        const contentNode = this.node.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT)[0];
         if (!contentNode) {
             throw new Error("'this.node' does not have the content as a direct children with class name 'p-TabBar-content'.");
         }
         this.node.removeChild(contentNode);
-        const contentContainer = document.createElement('div');
-        contentContainer.classList.add(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER);
-        contentContainer.appendChild(contentNode);
-        this.node.appendChild(contentContainer);
+        this.contentContainer = document.createElement('div');
+        this.contentContainer.classList.add(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER);
+        this.contentContainer.appendChild(contentNode);
+        this.node.appendChild(this.contentContainer);
 
-        const actionGroup = document.createElement('div');
-        actionGroup.classList.add(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_ACTION_GROUP);
-        this.node.appendChild(actionGroup);
-    }
-
-    get contentNode(): HTMLUListElement {
-        const contentContainer = this.node.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER)[0];
-        return contentContainer.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT)[0] as HTMLUListElement;
-    }
-
-    protected get scrollbarHost(): HTMLElement {
-        return this.node.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER)[0] as HTMLElement;
+        this.toolbar = document.createElement('div');
+        this.toolbar.classList.add(ToolbarAwareTabBar.Styles.TAB_BAR_TOOLBAR);
+        this.node.appendChild(this.toolbar);
     }
 
 }
@@ -312,9 +359,9 @@ export namespace ToolbarAwareTabBar {
 
     export namespace Styles {
 
-        export const TAB_BAR_CONTENT = 'p-TabBar-content';
         export const TAB_BAR_CONTENT_CONTAINER = 'p-TabBar-content-container';
-        export const TAB_BAR_CONTENT_ACTION_GROUP = 'p-TabBar-content-action-group';
+        export const TAB_BAR_TOOLBAR = 'p-TabBar-toolbar';
+        export const TAB_BAR_CONTENT = 'p-TabBar-content';
 
     }
 

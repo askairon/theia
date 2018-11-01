@@ -19,6 +19,7 @@ import { Widget } from '@phosphor/widgets';
 import { FrontendApplicationContribution, WidgetOpenerOptions, NavigatableWidgetOpenHandler } from '@theia/core/lib/browser';
 import { EditorManager, TextEditor, EditorWidget, EditorContextMenu } from '@theia/editor/lib/browser';
 import { DisposableCollection, CommandContribution, CommandRegistry, Command, MenuContribution, MenuModelRegistry, CommandHandler, Disposable } from '@theia/core/lib/common';
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/src/browser/shell/tab-toolbar';
 import URI from '@theia/core/lib/common/uri';
 import { Position } from 'vscode-languageserver-types';
 import { PreviewWidget } from './preview-widget';
@@ -40,7 +41,8 @@ export interface PreviewOpenerOptions extends WidgetOpenerOptions {
 }
 
 @injectable()
-export class PreviewContribution extends NavigatableWidgetOpenHandler<PreviewWidget> implements CommandContribution, MenuContribution, FrontendApplicationContribution {
+// tslint:disable-next-line:max-line-length
+export class PreviewContribution extends NavigatableWidgetOpenHandler<PreviewWidget> implements CommandContribution, MenuContribution, FrontendApplicationContribution, TabBarToolbarContribution {
 
     readonly id = PreviewUri.id;
     readonly label = 'Preview';
@@ -214,6 +216,14 @@ export class PreviewContribution extends NavigatableWidgetOpenHandler<PreviewWid
         menus.registerMenuAction(EditorContextMenu.NAVIGATION, {
             commandId: PreviewCommands.OPEN.id,
             label: PreviewCommands.OPEN.label,
+        });
+    }
+
+    registerToolbarItems(registry: TabBarToolbarRegistry): void {
+        registry.registerItem({
+            id: PreviewCommands.OPEN.id,
+            command: PreviewCommands.OPEN,
+            isActive: widget => widget instanceof EditorWidget && this.canHandleEditorUri()
         });
     }
 

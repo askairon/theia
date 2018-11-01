@@ -174,4 +174,3 @@ button[disabled], .theia-button[disabled] {
 @import './search-box.css';
 @import './ansi.css';
 @import './view-container.css';
-@import './widget-toolbar.css';
