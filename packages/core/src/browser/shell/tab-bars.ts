@@ -181,47 +181,22 @@ export class TabBarRenderer extends TabBar.Renderer {
  */
 export class ScrollableTabBar extends TabBar<Widget> {
 
-    protected static TAB_BAR_CONTENT = 'p-TabBar-content';
-    protected static TAB_BAR_CONTENT_CONTAINER = 'p-TabBar-content-container';
-    protected static TAB_BAR_CONTENT_ACTION_GROUP = 'p-TabBar-content-action-group';
+    protected scrollBar?: PerfectScrollbar;
 
-    protected scrollBar: PerfectScrollbar | undefined;
-
-    protected scrollBarFactory: (() => PerfectScrollbar) | undefined;
+    private scrollBarFactory: () => PerfectScrollbar;
     private pendingReveal?: Promise<void>;
 
-    constructor(protected readonly options?: TabBar.IOptions<Widget> & PerfectScrollbar.Options) {
+    constructor(options?: TabBar.IOptions<Widget> & PerfectScrollbar.Options) {
         super(options);
-
-        // const contentNode = this.node.getElementsByClassName('p-TabBar-content')[0];
-        // if (!contentNode) {
-        //     throw new Error("'this.node' does not have the content as a direct children with class name 'p-TabBar-content'.");
-        // }
-        // this.node.removeChild(contentNode);
-        // const contentContainer = document.createElement('div');
-        // contentContainer.classList.add(ScrollableTabBar.TAB_BAR_CONTENT_CONTAINER);
-        // contentContainer.appendChild(contentNode);
-        // this.node.appendChild(contentContainer);
-
-        // const actionGroup = document.createElement('div');
-        // actionGroup.classList.add(ScrollableTabBar.TAB_BAR_CONTENT_ACTION_GROUP);
-        // this.node.appendChild(actionGroup);
+        this.scrollBarFactory = () => new PerfectScrollbar(this.node, options);
     }
 
     protected onAfterAttach(msg: Message): void {
-        super.onAfterAttach(msg);
         if (!this.scrollBar) {
-            if (!this.scrollBarFactory) {
-                this.scrollBarFactory = () => new PerfectScrollbar(this.tabContentParent(), this.options);
-            }
             this.scrollBar = this.scrollBarFactory();
         }
+        super.onAfterAttach(msg);
     }
-
-    // get contentNode(): HTMLUListElement {
-    //     const contentContainer = this.node.getElementsByClassName(ScrollableTabBar.TAB_BAR_CONTENT_CONTAINER)[0];
-    //     return contentContainer.getElementsByClassName(ScrollableTabBar.TAB_BAR_CONTENT)[0] as HTMLUListElement;
-    // }
 
     protected onBeforeDetach(msg: Message): void {
         super.onBeforeDetach(msg);
@@ -232,21 +207,7 @@ export class ScrollableTabBar extends TabBar<Widget> {
     }
 
     protected onUpdateRequest(msg: Message): void {
-        this.renderContent();
-        // if (!this.jo) {
-        //     this.jo = new Widget();
-        //     this.jo.addClass('theia-foo');
-        // }
-        // if (this.jo.isAttached) {
-        //     Widget.detach(this.jo);
-        // }
-        // Widget.attach(this.jo, this.node);
-        // this.toDisposeOnDetach.push(Disposable.create(() => {
-        //     if (this.widgetToolbar) {
-        //         Widget.detach(this.widgetToolbar);
-        //         this.widgetToolbar = undefined;
-        //     }
-        // }));
+        super.onUpdateRequest(msg);
         if (this.scrollBar) {
             this.scrollBar.update();
         }
@@ -262,22 +223,6 @@ export class ScrollableTabBar extends TabBar<Widget> {
         }
     }
 
-    protected renderContent(): void {
-        const titles = this.titles;
-        const renderer = this.renderer;
-        const currentTitle = this.currentTitle;
-        const content = new Array(titles.length);
-        // tslint:disable-next-line:one-variable-per-declaration
-        for (let i = 0, n = titles.length; i < n; ++i) {
-            const title = titles[i];
-            const current = title === currentTitle;
-            const zIndex = current ? n : n - i - 1;
-            content[i] = renderer.renderTab({ title, current, zIndex });
-        }
-
-        VirtualDOM.render(content, this.contentNode);
-    }
-
     /**
      * Reveal the tab with the given index by moving the scroll bar if necessary.
      */
@@ -291,7 +236,7 @@ export class ScrollableTabBar extends TabBar<Widget> {
             window.requestAnimationFrame(() => {
                 const tab = this.contentNode.children[index] as HTMLElement;
                 if (tab && this.isVisible) {
-                    const parent = this.tabContentParent();
+                    const parent = this.node;
                     if (this.orientation === 'horizontal') {
                         const scroll = parent.scrollLeft;
                         const left = tab.offsetLeft;
@@ -326,10 +271,6 @@ export class ScrollableTabBar extends TabBar<Widget> {
         return result;
     }
 
-    protected tabContentParent(): HTMLElement {
-        return this.node;
-    }
-
 }
 
 export class ToolbarAwareTabBar extends ScrollableTabBar {
@@ -343,23 +284,35 @@ export class ToolbarAwareTabBar extends ScrollableTabBar {
         }
         this.node.removeChild(contentNode);
         const contentContainer = document.createElement('div');
-        contentContainer.classList.add(ScrollableTabBar.TAB_BAR_CONTENT_CONTAINER);
+        contentContainer.classList.add(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER);
         contentContainer.appendChild(contentNode);
         this.node.appendChild(contentContainer);
 
         const actionGroup = document.createElement('div');
-        actionGroup.classList.add(ScrollableTabBar.TAB_BAR_CONTENT_ACTION_GROUP);
+        actionGroup.classList.add(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_ACTION_GROUP);
         this.node.appendChild(actionGroup);
 
     }
 
     get contentNode(): HTMLUListElement {
-        const contentContainer = this.node.getElementsByClassName(ScrollableTabBar.TAB_BAR_CONTENT_CONTAINER)[0];
-        return contentContainer.getElementsByClassName(ScrollableTabBar.TAB_BAR_CONTENT)[0] as HTMLUListElement;
+        const contentContainer = this.node.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER)[0];
+        return contentContainer.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT)[0] as HTMLUListElement;
     }
 
     protected tabContentParent(): HTMLElement {
-        return this.node.getElementsByClassName(ScrollableTabBar.TAB_BAR_CONTENT_CONTAINER)[0] as HTMLElement;
+        return this.node.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER)[0] as HTMLElement;
+    }
+
+}
+
+export namespace ToolbarAwareTabBar {
+
+    export namespace Styles {
+
+        export const TAB_BAR_CONTENT = 'p-TabBar-content';
+        export const TAB_BAR_CONTENT_CONTAINER = 'p-TabBar-content-container';
+        export const TAB_BAR_CONTENT_ACTION_GROUP = 'p-TabBar-content-action-group';
+
     }
 
 }

@@ -39,18 +39,8 @@ export class BaseWidget extends Widget {
 
     protected readonly toDispose = new DisposableCollection();
     protected readonly toDisposeOnDetach = new DisposableCollection();
-
     protected scrollBar?: PerfectScrollbar;
     protected scrollOptions?: PerfectScrollbar.Options;
-    protected widgetToolbar?: WidgetToolbar;
-
-    constructor(protected readonly options?: BaseWidget.Options) {
-        super(options);
-        if (!!this.options && !!this.options.hasToolbar) {
-            // this.addClass('theia-relative');
-            // this.widgetToolbar = new WidgetToolbar();
-        }
-    }
 
     dispose(): void {
         if (this.isDisposed) {
@@ -84,13 +74,6 @@ export class BaseWidget extends Widget {
         super.onBeforeDetach(msg);
     }
 
-    // protected onActivateRequest(msg: Message): void {
-    //     super.onActivateRequest(msg);
-    //     if (this.hasToolbar()) {
-
-    //     }
-    // }
-
     protected onAfterAttach(msg: Message): void {
         super.onAfterAttach(msg);
         if (this.scrollOptions) {
@@ -98,7 +81,7 @@ export class BaseWidget extends Widget {
                 const container = await this.getScrollContainer();
                 container.style.overflow = 'hidden';
                 this.scrollBar = new PerfectScrollbar(container, this.scrollOptions);
-                this.toDispose.push(Disposable.create(async () => {
+                this.toDisposeOnDetach.push(Disposable.create(() => {
                     if (this.scrollBar) {
                         this.scrollBar.destroy();
                         this.scrollBar = undefined;
@@ -107,18 +90,6 @@ export class BaseWidget extends Widget {
                     container.style.overflow = null;
                 }));
             })();
-        }
-        if (this.widgetToolbar) {
-            if (this.widgetToolbar.isAttached) {
-                Widget.detach(this.widgetToolbar);
-            }
-            Widget.attach(this.widgetToolbar, this.node);
-            this.toDisposeOnDetach.push(Disposable.create(() => {
-                if (this.widgetToolbar) {
-                    Widget.detach(this.widgetToolbar);
-                    this.widgetToolbar = undefined;
-                }
-            }));
         }
     }
 
@@ -154,15 +125,6 @@ export class BaseWidget extends Widget {
     protected addClipboardListener<K extends 'cut' | 'copy' | 'paste'>(element: HTMLElement, type: K, listener: EventListenerOrEventListenerObject<K>): void {
         this.toDisposeOnDetach.push(addClipboardListener(element, type, listener));
     }
-
-}
-
-export namespace BaseWidget {
-
-    export interface Options extends Widget.IOptions {
-        readonly hasToolbar?: boolean;
-    }
-
 }
 
 export function setEnabled(element: HTMLElement, enabled: boolean): void {
@@ -252,19 +214,4 @@ export function addClipboardListener<K extends 'cut' | 'copy' | 'paste'>(element
     return Disposable.create(() =>
         document.removeEventListener(type, documentListener)
     );
-}
-
-export class WidgetToolbar extends BaseWidget {
-
-    constructor(readonly options?: BaseWidget.Options) {
-        super(options);
-        if (this.options && this.options.hasToolbar) {
-            throw new Error(`A toolbar widget cannot have a toolbar. 'options.toolbar: true' is prohibited here. 'options' was: ${JSON.stringify(options)}`);
-        }
-        // const div = document.createElement('div');
-        this.addClass('theia-widget-toolbar');
-        this.removeClass('p-Widget');
-        // this.node.appendChild(div);
-    }
-
 }
