@@ -188,7 +188,7 @@ export class ScrollableTabBar extends TabBar<Widget> {
 
     constructor(options?: TabBar.IOptions<Widget> & PerfectScrollbar.Options) {
         super(options);
-        this.scrollBarFactory = () => new PerfectScrollbar(this.node, options);
+        this.scrollBarFactory = () => new PerfectScrollbar(this.scrollbarHost, options);
     }
 
     protected onAfterAttach(msg: Message): void {
@@ -236,7 +236,7 @@ export class ScrollableTabBar extends TabBar<Widget> {
             window.requestAnimationFrame(() => {
                 const tab = this.contentNode.children[index] as HTMLElement;
                 if (tab && this.isVisible) {
-                    const parent = this.node;
+                    const parent = this.scrollbarHost;
                     if (this.orientation === 'horizontal') {
                         const scroll = parent.scrollLeft;
                         const left = tab.offsetLeft;
@@ -271,6 +271,10 @@ export class ScrollableTabBar extends TabBar<Widget> {
         return result;
     }
 
+    protected get scrollbarHost(): HTMLElement {
+        return this.node;
+    }
+
 }
 
 export class ToolbarAwareTabBar extends ScrollableTabBar {
@@ -291,7 +295,6 @@ export class ToolbarAwareTabBar extends ScrollableTabBar {
         const actionGroup = document.createElement('div');
         actionGroup.classList.add(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_ACTION_GROUP);
         this.node.appendChild(actionGroup);
-
     }
 
     get contentNode(): HTMLUListElement {
@@ -299,7 +302,7 @@ export class ToolbarAwareTabBar extends ScrollableTabBar {
         return contentContainer.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT)[0] as HTMLUListElement;
     }
 
-    protected tabContentParent(): HTMLElement {
+    protected get scrollbarHost(): HTMLElement {
         return this.node.getElementsByClassName(ToolbarAwareTabBar.Styles.TAB_BAR_CONTENT_CONTAINER)[0] as HTMLElement;
     }
 
