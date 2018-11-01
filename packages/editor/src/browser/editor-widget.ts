@@ -25,7 +25,7 @@ export class EditorWidget extends BaseWidget implements SaveableSource, Navigata
         readonly editor: TextEditor,
         protected readonly selectionService: SelectionService
     ) {
-        super({ node: editor.node, toolbar: true });
+        super({ node: editor.node, hasToolbar: true });
         this.toDispose.push(this.editor);
         this.toDispose.push(this.editor.onSelectionChanged(() => {
             if (this.editor.isFocused()) {

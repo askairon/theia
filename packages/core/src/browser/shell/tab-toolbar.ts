@@ -14,36 +14,23 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-/* 
-.p-Widget {
-    overflow: initial !important;
-} */
+import { injectable } from 'inversify';
+import { Command } from '../../common/command';
 
-.theia-widget-toolbar {
-    width: 100px;
-    height: calc(var(--theia-private-horizontal-tab-height) + var(--theia-private-horizontal-tab-active-top-border));
-    position: absolute;
-    background: yellow;
-    overflow: initial !important;
-    top: calc(-1 * (
-            var(--theia-private-horizontal-tab-height) +
-            var(--theia-private-horizontal-tab-active-top-border) +
-            var(--theia-border-width))
-        );
-    right: 0px;
+export const TabToolbarContribution = Symbol('TabToolbarContribution');
+export interface TabToolbarContribution {
+
+    registerItem(registry: TabToolbarRegistry): void;
+
 }
 
-.theia-relative {
-    position: relative;
+export interface TabToolbarItem {
+    readonly command: Command | string;
+    readonly priority?: number;
+    readonly tooltip?: string;
 }
 
-.p-TabBar-content-action-group {
-    background: red;
-    flex-grow: 1;
-    min-width: 80px;
-}
+@injectable()
+export class TabToolbarRegistry {
 
-.p-TabBar-content-container {
-    background: rgb(30, 32, 26);
-    display: flex;
 }

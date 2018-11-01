@@ -42,12 +42,13 @@ export class BaseWidget extends Widget {
 
     protected scrollBar?: PerfectScrollbar;
     protected scrollOptions?: PerfectScrollbar.Options;
-    protected toolbar?: WidgetToolbar;
+    protected widgetToolbar?: WidgetToolbar;
 
     constructor(protected readonly options?: BaseWidget.Options) {
         super(options);
-        if (!!this.options && !!this.options.toolbar) {
-            this.toolbar = new WidgetToolbar();
+        if (!!this.options && !!this.options.hasToolbar) {
+            // this.addClass('theia-relative');
+            // this.widgetToolbar = new WidgetToolbar();
         }
     }
 
@@ -107,15 +108,15 @@ export class BaseWidget extends Widget {
                 }));
             })();
         }
-        if (this.toolbar) {
-            if (this.toolbar.isAttached) {
-                Widget.detach(this.toolbar);
+        if (this.widgetToolbar) {
+            if (this.widgetToolbar.isAttached) {
+                Widget.detach(this.widgetToolbar);
             }
-            Widget.attach(this.toolbar, this.node.parentElement!);
+            Widget.attach(this.widgetToolbar, this.node);
             this.toDisposeOnDetach.push(Disposable.create(() => {
-                if (this.toolbar) {
-                    Widget.detach(this.toolbar);
-                    this.toolbar = undefined;
+                if (this.widgetToolbar) {
+                    Widget.detach(this.widgetToolbar);
+                    this.widgetToolbar = undefined;
                 }
             }));
         }
@@ -159,7 +160,7 @@ export class BaseWidget extends Widget {
 export namespace BaseWidget {
 
     export interface Options extends Widget.IOptions {
-        readonly toolbar?: boolean;
+        readonly hasToolbar?: boolean;
     }
 
 }
@@ -257,12 +258,13 @@ export class WidgetToolbar extends BaseWidget {
 
     constructor(readonly options?: BaseWidget.Options) {
         super(options);
-        if (this.options && this.options.toolbar) {
+        if (this.options && this.options.hasToolbar) {
             throw new Error(`A toolbar widget cannot have a toolbar. 'options.toolbar: true' is prohibited here. 'options' was: ${JSON.stringify(options)}`);
         }
-        const div = document.createElement('div');
-        div.classList.add('theia-widget-toolbar');
-        this.node.appendChild(div);
+        // const div = document.createElement('div');
+        this.addClass('theia-widget-toolbar');
+        this.removeClass('p-Widget');
+        // this.node.appendChild(div);
     }
 
 }
